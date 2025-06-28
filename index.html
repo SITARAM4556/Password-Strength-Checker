@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password Strength Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(-45deg, #f3f4f6, #e2e8f0, #cbd5e1, #f3f4f6);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      padding-top: 40px;
+      overflow: hidden;
+    }
+    body,
+    .card,
+    .progress,
+    th,
+    td {
+    transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    .dark-mode {
+    background: #111827;
+    color: #f3f4f6;
+    }
+
+    .dark-mode .card {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    }
+
+    .dark-mode table {
+    background-color: #1f2937;
+    color: white;
+    }
+
+.dark-mode th {
+  background-color: #374151 !important;
+}
+
+.dark-mode .progress {
+  background-color: #374151;
+}
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    #checkbox {
+      display: none;
+    }
+
+    .label {
+      height: 60px;
+      width: 120px;
+      background-color: #ffffff;
+      border-radius: 30px;
+      box-shadow: inset 0 0 5px 4px rgba(255,255,255,1),
+                  inset 0 0 20px 1px rgba(0,0,0,0.488),
+                  10px 20px 30px rgba(0,0,0,0.096),
+                  inset 0 0 0 3px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.4s;
+    }
+
+    .label:hover {
+      transform: perspective(100px) rotateX(5deg) rotateY(-5deg);
+    }
+
+    #checkbox:checked ~ .label:hover {
+      transform: perspective(100px) rotateX(-5deg) rotateY(5deg);
+    }
+
+    .label::before {
+      content: "";
+      position: absolute;
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      background-color: #000000;
+      background-image: linear-gradient(130deg, #757272 10%, #ffffff 11%, #726f6f 62%);
+      left: 10px;
+      box-shadow: 0 2px 1px rgba(0, 0, 0, 0.3), 10px 10px 10px rgba(0, 0, 0, 0.3);
+      transition: 0.4s;
+    }
+
+    #checkbox:checked ~ .label::before {
+      left: 70px;
+      background-image: linear-gradient(315deg, #000000 0%, #414141 70%);
+    }
+
+    .card {
+    position:relative;
+    top: 25%;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transition: transform 0.4s ease, margin 0.4s ease;
+    }
+
+    .card h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .input-group {
+      position: relative;
+      margin: 1.5rem auto;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    .criteria {
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .criteria li {
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .criteria li.valid {
+      color: green;
+      font-weight: bold;
+    }
+
+    .criteria li.valid span::before {
+      content: '✔';
+      color: green;
+    }
+
+    .criteria li.invalid span::before {
+      content: '✖';
+      color: gray;
+    }
+
+    .strength {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    .progress {
+      height: 10px;
+      background-color: #e5e7eb;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      transition: width 0.3s, background-color 0.3s;
+    }
+
+    .message {
+      display: flex;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    #cardContainer {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.5s ease;
+    }
+
+    #card {
+      z-index: 1;
+      transition: transform 1s ease;
+    }
+
+    #card.shift-left {
+      transform: translateX(-350px);
+    }
+
+    #crackTable {
+      position: absolute;
+      left: -400px;
+      top: 23%;
+      opacity: 0;
+      transition: transform 1s ease, opacity 1s ease-out;
+      max-width: 750px;
+      min-width: 650px;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    #crackTable.show {
+      transform: translateX(600px);
+      opacity: 1;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      background-color: #2563eb;
+      color: white;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      margin-top: 200px;
+    }
+   
+.dark-mode {
+  background: #111827;
+  color: #f3f4f6;
+}
+
+.dark-mode .card {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
+.dark-mode table {
+  background-color: #1f2937;
+  color: white;
+}
+
+.dark-mode th {
+  background-color: #374151 !important;
+}
+
+.dark-mode .progress {
+  background-color: #374151;
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <input type="checkbox" id="checkbox">
+    <label class="label" for="checkbox"></label>
+  </div>
+
+  <div id="cardContainer">
+    <div class="card" id="card">
+      <h1>🔐 Password Strength Checker</h1>
+      <div class="input-group">
+        <input type="password" id="password" placeholder="Enter your password" />
+        <span class="toggle-visibility" id="toggleVisibility">👁️</span>
+      </div>
+      <ul class="criteria">
+        <li id="length" class="invalid"><span></span> At least 8 characters</li>
+        <li id="uppercase" class="invalid"><span></span> Contains uppercase letter</li>
+        <li id="lowercase" class="invalid"><span></span> Contains lowercase letter</li>
+        <li id="number" class="invalid"><span></span> Contains number</li>
+        <li id="special" class="invalid"><span></span> Contains special character</li>
+      </ul>
+      <div class="strength" id="strengthText">Strength: </div>
+      <div class="progress">
+        <div id="progressBar" class="progress-bar" style="width: 0%; background-color: red;"></div>
+      </div>
+      <div id="feedback" class="message"></div>
+    </div>
+
+    <div class="card" id="crackTable">
+      <h1 style="text-align:center;">🧠 Password Crack Time Chart</h1>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center;">
+        <thead style="background-color: #111827; color: white;">
+          <tr><th># Chars</th><th>Numbers Only</th><th>Lowercase</th><th>Upper & Lower</th><th>+ Numbers</th><th>+ Symbols</th></tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #ef4444; color: white;"><td>5</td><td>Instant</td><td>Instant</td><td>57m</td><td>1h</td><td>4h</td></tr>
+          <tr style="background-color: #f97316; color: white;"><td>6</td><td>46m</td><td>2d</td><td>6d</td><td>1w</td><td>2w</td></tr>
+          <tr style="background-color: #f59e0b;"><td>7</td><td>20h</td><td>4w</td><td>1y</td><td>2y</td><td>6y</td></tr>
+          <tr style="background-color: #eab308;"><td>8</td><td>3w</td><td>15y</td><td>62y</td><td>200y</td><td>1k</td></tr>
+          <tr style="background-color: #84cc16;"><td>9</td><td>2y</td><td>91y</td><td>3k</td><td>11k</td><td>25k</td></tr>
+          <tr style="background-color: #22c55e;"><td>10</td><td>1d</td><td>40y</td><td>41k</td><td>238k</td><td>8M</td></tr>
+          <tr style="background-color: #10b981;"><td>11</td><td>1w</td><td>2.7k</td><td>111M</td><td>917M</td><td>3B</td></tr>
+          <tr style="background-color: #0ea5e9; color: white;"><td>12</td><td>3m</td><td>705k</td><td>50B</td><td>56B</td><td>275B</td></tr>
+          <tr style="background-color: #6366f1; color: white;"><td>13</td><td>28y</td><td>18M</td><td>300B</td><td>3T</td><td>19T</td></tr>
+          <tr style="background-color: #8b5cf6; color: white;"><td>14</td><td>284y</td><td>47M</td><td>15T</td><td>218T</td><td>1.2Q</td></tr>
+          <tr style="background-color: #a855f7; color: white;"><td>15</td><td>2k</td><td>128B</td><td>812T</td><td>134Q</td><td>944Q</td></tr>
+          <tr style="background-color: #d946ef; color: white;"><td>16</td><td>28k</td><td>322B</td><td>42Q</td><td>840Q</td><td>6QN</td></tr>
+          <tr style="background-color: #ec4899; color: white;"><td>17</td><td>284k</td><td>8T</td><td>2QN</td><td>522QN</td><td>463QN</td></tr>
+          <tr style="background-color: #be185d; color: white;"><td>18+</td><td>Centuries</td><td>8T yrs</td><td>2QN yrs</td><td>5QN</td><td>🛡 Uncrackable</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <button id="toggleChartBtn">Show/Hide Crack Time Chart</button>
+
+  <script>
+    const passwordInput = document.getElementById('password');
+    const strengthText = document.getElementById('strengthText');
+    const progressBar = document.getElementById('progressBar');
+    const feedback = document.getElementById('feedback');
+    const toggleVisibility = document.getElementById('toggleVisibility');
+
+    const lengthItem = document.getElementById('length');
+    const uppercaseItem = document.getElementById('uppercase');
+    const lowercaseItem = document.getElementById('lowercase');
+    const numberItem = document.getElementById('number');
+    const specialItem = document.getElementById('special');
+
+    toggleVisibility.addEventListener('click', () => {
+      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+      toggleVisibility.textContent = passwordInput.type === 'password' ? '👁️' : '🙈';
+    });
+
+    passwordInput.addEventListener('input', () => {
+      const pwd = passwordInput.value;
+      let score = 0;
+
+      const conditions = [
+        { test: pwd.length >= 8, element: lengthItem },
+        { test: /[A-Z]/.test(pwd), element: uppercaseItem },
+        { test: /[a-z]/.test(pwd), element: lowercaseItem },
+        { test: /[0-9]/.test(pwd), element: numberItem },
+        { test: /[^A-Za-z0-9]/.test(pwd), element: specialItem },
+      ];
+
+      conditions.forEach(({ test, element }) => {
+        element.classList.toggle('valid', test);
+        element.classList.toggle('invalid', !test);
+        if (test) score++;
+      });
+
+      const labels = ["Weak", "Fair", "Good", "Strong", "Excellent", "Ultimate"];
+      const colors = ["red", "orange", "yellow", "blue", "green", "purple"];
+
+      strengthText.textContent = `Strength: ${labels[score]}`;
+      progressBar.style.width = `${(score / 5) * 100}%`;
+      progressBar.style.backgroundColor = colors[score];
+
+      feedback.innerHTML = score < 3
+        ? '<span style="color:red">⚠️ Your password is not secure.</span>'
+        : '<span style="color:green">✅ Looks good! Your password is strong.</span>';
+    });
+
+    const toggleChartBtn = document.getElementById('toggleChartBtn');
+    const crackTable = document.getElementById('crackTable');
+    const card = document.getElementById('card');
+
+    toggleChartBtn.addEventListener('click', () => {
+      crackTable.classList.toggle('show');
+      card.classList.toggle('shift-left');
+    });
+
+
+  // Dark mode toggle
+  const darkToggle = document.getElementById('checkbox');
+  const body = document.body;
+
+  darkToggle.addEventListener('change', () => {
+    body.classList.toggle('dark-mode');
+  });
+
+  </script>
+</body>
+</html>
